@@ -23,7 +23,16 @@ Authors@R:
 URL: https://github.com/ropensci-org/devguider
 BugReports: https://github.com/ropensci-org/devguider/issues
 Imports:
+    blogdown,
+    commonmark,
+    dplyr,
     fs,
+    magrittr,
     memoise,
-    spelling
+    purrr,
+    spelling,
+    stringr,
+    urltools,
+    withr,
+    xml2
 RoxygenNote: 7.1.2
