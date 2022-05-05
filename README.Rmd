@@ -1,0 +1,14 @@
+---
+title: "devguider"
+output:
+  md_document:
+    variant: gfm
+
+  rmarkdown::html_vignette:
+    self_contained: no
+---
+
+
+# devguider
+
+Tools for automating processes to manage rOpenSci's DevGuide
