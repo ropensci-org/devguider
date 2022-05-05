@@ -27,8 +27,7 @@ devguide_thanks <- function () {
           dplyr::pull(path)
 
         changelog_thanks <- readLines("appendix.Rmd") %>%
-          blogdown:::split_yaml_body() %>%
-          .$body %>%
+          get_rmarkdown_body() %>%
           commonmark::markdown_xml(extensions = TRUE) %>%
           xml2::read_xml() %>%
           xml2::xml_find_all(xpath = './/d1:code', xml2::xml_ns(.)) %>%
@@ -38,8 +37,7 @@ devguide_thanks <- function () {
           unique()
 
         thanks2020 <- readLines("appendix.Rmd")[1:83] %>%
-          blogdown:::split_yaml_body() %>%
-          .$body %>%
+          get_rmarkdown_body() %>%
           commonmark::markdown_xml(extensions = TRUE) %>%
           xml2::read_xml() %>%
           xml2::xml_find_all(xpath = './/d1:code', xml2::xml_ns(.)) %>%
