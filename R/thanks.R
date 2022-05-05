@@ -1,10 +1,3 @@
-
-# access internal fn while suppressing R CMD Check note:
-split_yaml <- utils::getFromNamespace ("split_yaml_body", "blogdown",
-                                       envir = as.environment ("package:blogdown"))
-# ... but not used because `split_yaml_body` itself calls an internal function
-# from `knitr`, and so just propagates the warning further.
-
 #' Extract list of people to thank for Dev Guide contributions
 #'
 #' @export
@@ -16,8 +9,7 @@ devguide_thanks <- function () {
     thanks <- withr::with_dir (devguide_path (), {
 
         index_thanks <- readLines("index.Rmd") %>%
-          blogdown:::split_yaml_body() %>%
-          .$body %>%
+          get_rmarkdown_body() %>%
           commonmark::markdown_xml(extensions = TRUE) %>%
           xml2::read_xml() %>%
           xml2::xml_find_all(xpath = './/d1:link', xml2::xml_ns(.)) %>%
