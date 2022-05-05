@@ -40,3 +40,11 @@ devguide_path_internal <- function (path) {
 }
 
 m_devguide_path_internal <- memoise::memoise (devguide_path_internal)
+
+devguide_repo <- function () {
+
+    path <- devguide_path ()
+    desc <- data.frame (read.dcf (file.path (path, "DESCRIPTION")))
+
+    return (desc$URL)
+}
