@@ -25,13 +25,17 @@ BugReports: https://github.com/ropensci-org/devguider/issues
 Imports:
     blogdown,
     commonmark,
+    crul,
     dplyr,
     fs,
+    glue,
     magrittr,
     memoise,
     purrr,
+    ratelimitr,
     spelling,
     stringr,
+    tibble,
     urltools,
     withr,
     xml2
