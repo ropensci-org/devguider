@@ -8,4 +8,16 @@ Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repost
 
 # devguider
 
-Tools for automating processes to manage rOpenSci’s DevGuide
+Tools for automating processes to manage rOpenSci’s DevGuide. Currently
+includes the following main functions:
+
+1.  `devguide_spelling()` to check the spelling of the entire text.
+2.  `devguide_thanks()` to return a list of people who should be thanked
+    for contributions to the current version.
+3.  `devguide_urls()` to check whether all URLs given in the Dev Guide
+    actually exist.
+4.  `devguide_prerelease()` to open a pre-release issue on GitHub for
+    the next release (should be run one month prior to planned release).
+
+An additional utility function, `devguide_path()`, finds the path to the
+local `devguide` repository.
