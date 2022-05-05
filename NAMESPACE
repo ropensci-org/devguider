@@ -2,6 +2,7 @@
 
 export("%>%")
 export(devguide_path)
+export(devguide_prerelease)
 export(devguide_spelling)
 export(devguide_thanks)
 export(devguide_urls)

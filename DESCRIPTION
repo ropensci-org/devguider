@@ -28,7 +28,9 @@ Imports:
     crul,
     dplyr,
     fs,
+    gert,
     glue,
+    jsonlite,
     magrittr,
     memoise,
     purrr,
@@ -39,4 +41,5 @@ Imports:
     urltools,
     withr,
     xml2
+SystemRequirements: GitHub cli
 RoxygenNote: 7.1.2
