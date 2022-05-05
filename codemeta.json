@@ -46,7 +46,34 @@
     }
   ],
   "softwareRequirements": {
+    "1": {
+      "@type": "SoftwareApplication",
+      "identifier": "fs",
+      "name": "fs",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=fs"
+    },
+    "2": {
+      "@type": "SoftwareApplication",
+      "identifier": "memoise",
+      "name": "memoise",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=memoise"
+    },
     "SystemRequirements": null
   },
-  "fileSize": "0KB"
+  "fileSize": "10.853KB",
+  "readme": "https://github.com/ropensci-org/devguider/blob/main/README.md",
+  "contIntegration": "https://github.com/ropensci-org/devguider/actions?query=workflow%3AR-CMD-check",
+  "developmentStatus": "https://www.repostatus.org/#active"
 }
