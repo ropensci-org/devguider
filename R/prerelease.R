@@ -80,7 +80,7 @@ make_checklist <- function (repo, version) {
 
     u <- "https://raw.githubusercontent.com/ropensci/dev_guide/HEAD/templates/book-release.md"
     f <- file.path (tempdir (), basename (u))
-    download.file (u, f, quiet = TRUE)
+    utils::download.file (u, f, quiet = TRUE)
     md <- readLines (f)
     md [1] <- gsub ("<insert version>", version, md [1])
 
