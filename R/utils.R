@@ -48,3 +48,11 @@ devguide_repo <- function () {
 
     return (desc$URL)
 }
+
+# Adapted from blogdown
+get_rmarkdown_body <- function (x)
+{
+  i = grep("^---\\s*$", x)
+  n = length(x)
+  x[(i[2] + 1):n]
+}
