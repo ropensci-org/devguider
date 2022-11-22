@@ -28,8 +28,11 @@ Imports:
     dplyr,
     fs,
     gert,
+    ghql,
+    gitcreds,
     glue,
     jsonlite,
+    lubridate,
     magrittr,
     memoise,
     purrr,
@@ -41,4 +44,4 @@ Imports:
     withr,
     xml2
 SystemRequirements: GitHub cli
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.2
