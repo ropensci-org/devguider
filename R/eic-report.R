@@ -114,6 +114,11 @@ devguide_eic_gh_data <- function () {
     stages <- vapply (labels, function (i) i [1], character (1L))
     labels <- lapply (labels, function (i) i [-1])
 
+    # And remove `pkgcheck` results:
+    comments <- lapply (comments, function (i) {
+        i [grep ("^## Checks for", i)] <- "## pkgcheck check results"
+        return (i)  })
+
     res <- data.frame (
         number = number,
         stage = stages,
