@@ -1,7 +1,7 @@
 Package: devguider
 Type: Package
 Title: Tools for automating processes to manage rOpenSci's DevGuide
-Version: 0.0.1.002
+Version: 0.0.1.003
 Description: Tools for automating processes to manage rOpenSci's DevGuide.
 License: MIT + file LICENSE
 Encoding: UTF-8

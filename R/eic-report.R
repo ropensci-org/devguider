@@ -110,9 +110,9 @@ devguide_eic_gh_data <- function () {
     data.frame (
         number = number,
         assignees = I (assignees),
-        createdAt = lubridate::ymd_hms (createdAt),
-        lastEditedAt = lubridate::ymd_hms (lastEditedAt),
-        updatedAt = lubridate::ymd_hms (updatedAt),
+        createdAt = lubridate::date (lubridate::ymd_hms (createdAt)),
+        lastEditedAt = lubridate::date (lubridate::ymd_hms (lastEditedAt)),
+        updatedAt = lubridate::date (lubridate::ymd_hms (updatedAt)),
         titles = titles,
         labels = I (labels),
         comments = I (comments)
