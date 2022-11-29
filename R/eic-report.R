@@ -107,8 +107,16 @@ devguide_eic_gh_data <- function () {
             unname (unlist (i$node$comments$nodes))))
     }
 
-    data.frame (
+    # Sort labels so "official" 'N/' ones come first, which happens to be done
+    # perfectly by standard sort:
+    labels <- lapply (labels, function (i) sort (i))
+    # Then separate out that first as "stage"
+    stages <- vapply (labels, function (i) i [1], character (1L))
+    labels <- lapply (labels, function (i) i [-1])
+
+    res <- data.frame (
         number = number,
+        stage = stages,
         assignees = I (assignees),
         createdAt = lubridate::date (lubridate::ymd_hms (createdAt)),
         lastEditedAt = lubridate::date (lubridate::ymd_hms (lastEditedAt)),
@@ -117,6 +125,7 @@ devguide_eic_gh_data <- function () {
         labels = I (labels),
         comments = I (comments)
     )
+    res [order (res$stage), ]
 }
 
 #' Generate a summary report for incoming Editor-in-Charge of current state of
