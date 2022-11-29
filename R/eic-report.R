@@ -66,14 +66,11 @@ get_issues_qry <- function (gh_cli,
 
 #' Apply the query above to extract data from GitHub GraphQL API, and
 #' post-process into a `data.frame`.
+#'
+#' @return (Invisibly) A `data.frame` with one row per issue and some key
+#' statistics.
 #' @noRd
 devguide_eic_gh_data <- function () {
-
-    token <- get_gh_token ()
-    gh_cli <- ghql::GraphqlClient$new (
-        url = "https://api.github.com/graphql",
-        headers = list (Authorization = paste0 ("Bearer ", token))
-    )
 
     has_next_page <- TRUE
     end_cursor <- NULL
@@ -84,34 +81,33 @@ devguide_eic_gh_data <- function () {
 
     while (has_next_page) {
 
-        qry <- ghql::Query$new ()
         q <- get_issues_qry (
             gh_cli,
             org = "ropensci",
             repo = "software-review",
             end_cursor = end_cursor
         )
-        qry$query ("issues", q)
-
-        dat <- gh_cli$exec (qry$queries$issues) %>%
-            jsonlite::fromJSON ()
+        dat <- gh::gh_gql (query = q)
 
         has_next_page <- dat$data$repository$issues$pageInfo$hasNextPage
         end_cursor <- dat$data$repository$issues$pageInfo$endCursor
 
-        dat <- dat$data$repository$issues$edges$node
+        edges <- dat$data$repository$issues$edges
 
-        number <- c (number, dat$number)
-        assignees <- c (assignees, dat$assignees$nodes)
-        createdAt <- c (createdAt, dat$createdAt)
-        lastEditedAt <- c (lastEditedAt, dat$lastEditedAt)
-        updatedAt <- c (updatedAt, dat$updatedAt)
-        titles <- c (titles, dat$title)
-        labels <- c (labels, dat$labels$edges)
-        comments <- c (comments, dat$comments$nodes)
+        number <- c (number, vapply (edges, function (i) i$node$number, integer (1L)))
+        assignees <- c (assignees, lapply (edges, function (i) unlist (i$node$assignees$nodes)))
+        createdAt <- c (createdAt, vapply (edges, function (i) i$node$createdAt, character (1L)))
+        lastEditedAt <- c (lastEditedAt, vapply (edges, function (i) {
+            res <- i$node$lastEditedAt
+            if (is.null (res)) res <- ""
+            return (res)
+        }, character (1L)))
+        updatedAt <- c (updatedAt, vapply (edges, function (i) i$node$updatedAt, character (1L)))
+        titles <- c (titles, vapply (edges, function (i) i$node$title, character (1L)))
+        labels <- c (labels, lapply (edges, function (i) unname (unlist (i$node$labels$edges))))
+        comments <- c (comments, lapply (edges, function (i)
+            unname (unlist (i$node$comments$nodes))))
     }
-
-    labels <- lapply (labels, function (i) i$node$name)
 
     data.frame (
         number = number,

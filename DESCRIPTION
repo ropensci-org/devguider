@@ -28,7 +28,7 @@ Imports:
     dplyr,
     fs,
     gert,
-    ghql,
+    gh,
     gitcreds,
     glue,
     jsonlite,
