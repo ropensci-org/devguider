@@ -7,8 +7,7 @@ get_gh_token <- function (token = "") {
     )
 }
 
-get_issues_qry <- function (gh_cli,
-                            org = "ropensci",
+get_issues_qry <- function (org = "ropensci",
                             repo = "software-review",
                             end_cursor = NULL) {
 
@@ -82,7 +81,6 @@ devguide_eic_gh_data <- function () {
     while (has_next_page) {
 
         q <- get_issues_qry (
-            gh_cli,
             org = "ropensci",
             repo = "software-review",
             end_cursor = end_cursor
