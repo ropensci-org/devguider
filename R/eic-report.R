@@ -144,5 +144,90 @@ devguide_eic_report <- function () {
 
     dat <- devguide_eic_gh_data ()
 
-    return (dat)
+    cmt_data <- extract_comment_info (dat)
+    dat$comments <- NULL
+
+    return (dplyr::bind_cols (dat, cmt_data))
+}
+
+extract_comment_info <- function (dat) {
+
+    extract_one <- function (x) {
+        index <- 3 * seq_len (length (x) / 3) - 2
+
+        dates <- x [index]
+        actors <- x [index + 1]
+        comments <- x [index + 2]
+
+        index <- which (actors == "ropensci-review-bot" & grepl ("assigned|added", comments, ignore.case = TRUE))
+        dates <- dates [index]
+        comments <- comments [index]
+
+        editor <- editor_date <-
+            rev1 <- rev1_assigned <- rev1_due <- 
+            rev2 <- rev2_assigned <- rev2_due <- ""
+
+        index <- grep ("editor$", comments)
+        if (length (index) > 0) {
+            index <- max (index) # in case multiple editors re-assigned
+            editor <- gsub ("^Assigned\\!\\s", "", comments [index])
+            editor <- gsub ("\\s.*$", "", editor)
+            editor_date <- lubridate::date (lubridate::ymd_hms (dates [index]))
+        }
+
+        extract_rev <- function (comments, dates, index) {
+            rev1 <- gsub ("\\s.*$", "", comments [index [1]])
+            rev1_assigned <- lubridate::date (lubridate::ymd_hms (dates [index [1]]))
+            g <- regexpr ("[0-9]{4}\\-[0-9]{2}\\-[0-9]{2}", comments [index [1]])
+            rev1_due <- regmatches (comments [index [1]], g)
+            c (rev1, paste0 (rev1_assigned), rev1_due)
+        }
+        index <- grep ("reviewers list", comments)
+        if (length (index) > 0) {
+            rd1 <- extract_rev (comments, dates, index)
+            rev1 <- rd1 [1]
+            rev1_assigned <- rd1 [2]
+            rev1_due <- rd1 [3]
+            index <- index [-1]
+            if (length (index) > 0) {
+                rd2 <- extract_rev (comments, dates, index)
+                rev2 <- rd2 [1]
+                rev2_assigned <- rd2 [2]
+                rev2_due <- rd2 [3]
+            }
+        }
+
+        c (
+            editor = editor,
+            editor_date = paste0 (editor_date),
+            rev1 = rev1,
+            rev1_assigned = rev1_assigned,
+            rev1_due = rev1_due,
+            rev2 = rev2,
+            rev2_assigned = rev2_assigned,
+            rev2_due = rev2_due
+        )
+    }
+
+    res <- lapply (dat$comments, extract_one)
+
+    editor <- vapply (res, function (i) i [["editor"]], character (1L))
+    editor_date <- vapply (res, function (i) i [["editor_date"]], character (1L))
+    rev1 <- vapply (res, function (i) i [["rev1"]], character (1L))
+    rev1_assigned <- vapply (res, function (i) i [["rev1_assigned"]], character (1L))
+    rev1_due <- vapply (res, function (i) i [["rev1_due"]], character (1L))
+    rev2 <- vapply (res, function (i) i [["rev2"]], character (1L))
+    rev2_assigned <- vapply (res, function (i) i [["rev2_assigned"]], character (1L))
+    rev2_due <- vapply (res, function (i) i [["rev2_due"]], character (1L))
+
+    return (data.frame (
+        editor = editor,
+        editor_date = editor_date,
+        rev1 = rev1,
+        rev1_assigned = rev1_assigned,
+        rev1_due = rev1_due,
+        rev2 = rev2,
+        rev2_assigned = rev2_assigned,
+        rev2_due = rev2_due
+    ))
 }
