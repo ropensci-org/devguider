@@ -30,7 +30,7 @@ devguide_urls <- function () {
       crul::ok(
         url,
         verb = "get",
-        useragent = "Maëlle Salmon"
+        useragent = "devguide R package https://github.com/ropensci-org/devguider/"
         )
     }
 
