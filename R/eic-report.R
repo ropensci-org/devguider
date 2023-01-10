@@ -110,9 +110,33 @@ devguide_eic_gh_data <- function () {
     # Sort labels so "official" 'N/' ones come first, which happens to be done
     # perfectly by standard sort:
     labels <- lapply (labels, function (i) sort (i))
-    # Then separate out that first as "stage"
-    stages <- vapply (labels, function (i) i [1], character (1L))
-    labels <- lapply (labels, function (i) i [-1])
+    # Replace NULL with empty label
+    labels [which (vapply (labels, is.null, logical (1L)))] <- ""
+    # Then extract latest stage:
+    stages <- vapply (labels, function (i) {
+        ret <- NA_character_
+        st_i <- grep ("^[0-9]\\/", i, value = TRUE)
+        if (length (st_i) > 0) {
+            ret <- st_i [length (st_i)]
+        }
+        return (ret)
+    }, character (1L))
+    # Also identify any issues with multiple stages:
+    multiple_stages <- vapply (labels, function (i)
+        length (grep ("^[0-9]\\/", i)) > 1L,
+        logical (1L))
+
+    # Finally, reduce labels to the non-stage values:
+    labels <- lapply (labels, function (i) {
+        st_i <- grep ("^[0-9]\\/", i)
+        if (length (st_i) > 0) {
+            i <- i [-st_i]
+            if (length (i) == 0) {
+                i <- ""
+            }
+        }
+        return (i)
+    })
 
     # And remove `pkgcheck` results:
     comments <- lapply (comments, function (i) {
@@ -122,6 +146,7 @@ devguide_eic_gh_data <- function () {
     res <- data.frame (
         number = number,
         stage = stages,
+        has_multiple_stages = multiple_stages,
         assignees = I (assignees),
         createdAt = lubridate::date (lubridate::ymd_hms (createdAt)),
         lastEditedAt = lubridate::date (lubridate::ymd_hms (lastEditedAt)),
