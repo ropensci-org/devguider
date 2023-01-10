@@ -145,24 +145,39 @@ devguide_eic_gh_data <- function () {
 
     res <- data.frame (
         number = number,
+        titles = titles,
         stage = stages,
         has_multiple_stages = multiple_stages,
+        labels = I (labels),
         assignees = I (assignees),
         createdAt = lubridate::date (lubridate::ymd_hms (createdAt)),
         lastEditedAt = lubridate::date (lubridate::ymd_hms (lastEditedAt)),
         updatedAt = lubridate::date (lubridate::ymd_hms (updatedAt)),
-        titles = titles,
-        labels = I (labels),
         comments = I (comments)
     )
-    res [order (res$stage), ]
+    res <- res [order (res$stage), ]
+
+    # That puts "0/editorial-team-pre" before "0/presubmission" - reverse these:
+    index <- grep ("^0\\/", res$stage)
+    if (length (index) > 0) {
+        res0 <- res [index, ]
+        res <- res [-index, ]
+        index_pre <- grep ("presubmission", res0$stage)
+        index_edi <- grep ("editorial", res0$stage)
+        res <- rbind (
+            res0 [index_pre, ],
+            res0 [index_edi, ],
+            res
+        )
+    }
+
+    return (res)
 }
 
 #' Generate a summary report for incoming Editor-in-Charge of current state of
 #' all open software-review issues.
 #'
-#' @return (Invisibly) A `data.frame` with one row per issue and some key
-#' statistics.
+#' @return A `data.frame` with one row per issue and some key statistics.
 #' @export
 
 devguide_eic_report <- function () {
@@ -172,7 +187,9 @@ devguide_eic_report <- function () {
     cmt_data <- extract_comment_info (dat)
     dat$comments <- NULL
 
-    return (dplyr::bind_cols (dat, cmt_data))
+    dat <- dplyr::bind_cols (dat, cmt_data)
+
+    return (dat)
 }
 
 extract_comment_info <- function (dat) {

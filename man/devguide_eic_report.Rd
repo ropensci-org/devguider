@@ -8,8 +8,7 @@ all open software-review issues.}
 devguide_eic_report()
 }
 \value{
-(Invisibly) A `data.frame` with one row per issue and some key
-statistics.
+A `data.frame` with one row per issue and some key statistics.
 }
 \description{
 Generate a summary report for incoming Editor-in-Charge of current state of
