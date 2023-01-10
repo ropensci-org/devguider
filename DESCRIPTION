@@ -44,4 +44,4 @@ Imports:
     withr,
     xml2
 SystemRequirements: GitHub cli
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
