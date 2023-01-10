@@ -177,17 +177,21 @@ devguide_eic_gh_data <- function () {
 #' Generate a summary report for incoming Editor-in-Charge of current state of
 #' all open software-review issues.
 #'
+#' @param open If `TRUE` (default), open the results as a \pkg{DT} `datatable`
+#' HTML page in default browser.
 #' @return A `data.frame` with one row per issue and some key statistics.
 #' @export
 
-devguide_eic_report <- function () {
+devguide_eic_report <- function (open = TRUE) {
 
     dat <- devguide_eic_gh_data ()
 
     cmt_data <- extract_comment_info (dat)
     dat$comments <- NULL
 
-    dat <- dplyr::bind_cols (dat, cmt_data)
+    dat <- dplyr::bind_cols (dat, cmt_data) %>%
+        dplyr::relocate (editor, .after = labels) %>%
+        dplyr::relocate (editor_date, .after = editor)
 
     if (any (dat$has_multiple_stages)) {
         numbers <- dat$number [which (dat$has_multiple_stages)]
@@ -198,6 +202,18 @@ devguide_eic_report <- function () {
         )
         warning ("The following ", txt, " multiple 'stage' labels:\n   ",
                  paste0 (numbers, collapse = ", "))
+    }
+
+    # Collapse list columns:
+    listcols <- c ("assignees", "labels")
+    for (lc in listcols) {
+        dat [[lc]] <- vapply (dat [[lc]], function (i) {
+            paste0 (i, collapse = ", ")
+        }, character (1L))
+    }
+
+    if (open) {
+        open_gt_table (dat)
     }
 
     return (dat)
@@ -283,4 +299,83 @@ extract_comment_info <- function (dat) {
         rev2_assigned = rev2_assigned,
         rev2_due = rev2_due
     ))
+}
+
+open_gt_table <- function (dat) {
+
+    requireNamespace ("gt")
+    u <- "https://github.com/ropensci/software-review/issues/"
+    dat_url <- dat
+    add_html <- function (dat_url, what = "number") {
+        dat_url [[what]] <- paste0 (
+            "<p><a href=",
+            u,
+            dat_url$number,
+            ">",
+            dat_url [[what]],
+            "</a>"
+        )
+        dat_url [[what]] <- lapply (dat_url [[what]], gt::html)
+        return (dat_url)
+    }
+    # Number has to come last here!!
+    dat_url <- add_html (dat_url, "titles")
+    dat_url <- add_html (dat_url, "number")
+
+    gt::gt (
+        dat_url,
+        #rowname_col = "number",
+        groupname_col = "stage"
+    ) %>%
+        gt::tab_header ("rOpenSci submission overview") %>%
+        gt::cols_hide (has_multiple_stages) %>%
+        gt::tab_style (
+            style = list ( gt::cell_fill (color = "#FFFF99")),
+            locations = gt::cells_body (
+                columns = c (`number`, `titles`, `labels`)
+            )
+        ) %>%
+        gt::tab_spanner (
+            label = "Editor",
+            id = "ed_span",
+            columns = c (`editor`, `editor_date`, `assignees`)
+        ) %>%
+        gt::tab_spanner (
+            label = "Dates",
+            columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
+        ) %>%
+        gt::tab_style (
+            style = list ( gt::cell_fill (color = "#EEEEEE")),
+            locations = gt::cells_body (
+                columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
+            )
+        ) %>%
+        gt::tab_spanner (
+            label = "Reviewer #1",
+            id = "rev1span",
+            columns = c (`rev1`, `rev1_assigned`, `rev1_due`)
+        ) %>%
+        gt::tab_spanner (
+            label = "Reviewer #2",
+            columns = c (`rev2`, `rev2_assigned`, `rev2_due`)
+        ) %>%
+        gt::tab_style (
+            style = list (gt::cell_fill (color = "#EEEEEE")),
+            locations = gt::cells_body (
+                columns = c (`rev2`, `rev2_assigned`, `rev2_due`)
+            )
+        ) %>%
+        gt::tab_style (
+            # Alternative dark separators to distinguish group titles
+            style = list (
+                gt::cell_borders (side = "bottom", color = "#666666", weight = gt::px (3))
+            ),
+            locations = gt::cells_column_spanners (spanners = c ("ed_span", "rev1span"))
+        ) %>%
+        gt::tab_options (
+            heading.background.color = "#ACEACE",
+            row_group.background.color = "#FFAA77",
+            column_labels.background.color = "#9BD9BD",
+            heading.title.font.size = "200%"
+        )
 }

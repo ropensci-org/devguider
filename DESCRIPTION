@@ -43,5 +43,7 @@ Imports:
     urltools,
     withr,
     xml2
+Suggests:
+    gt
 SystemRequirements: GitHub cli
 RoxygenNote: 7.2.3

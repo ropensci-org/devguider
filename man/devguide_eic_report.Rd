@@ -5,7 +5,11 @@
 \title{Generate a summary report for incoming Editor-in-Charge of current state of
 all open software-review issues.}
 \usage{
-devguide_eic_report()
+devguide_eic_report(open = TRUE)
+}
+\arguments{
+\item{open}{If `TRUE` (default), open the results as a \pkg{DT} `datatable`
+HTML page in default browser.}
 }
 \value{
 A `data.frame` with one row per issue and some key statistics.
