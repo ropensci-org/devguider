@@ -189,6 +189,17 @@ devguide_eic_report <- function () {
 
     dat <- dplyr::bind_cols (dat, cmt_data)
 
+    if (any (dat$has_multiple_stages)) {
+        numbers <- dat$number [which (dat$has_multiple_stages)]
+        txt <- ifelse (
+            length (numbers) == 1,
+            "issue currently has",
+            "issues currently have"
+        )
+        warning ("The following ", txt, " multiple 'stage' labels:\n   ",
+                 paste0 (numbers, collapse = ", "))
+    }
+
     return (dat)
 }
 
