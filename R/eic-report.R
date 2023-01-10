@@ -213,7 +213,7 @@ devguide_eic_report <- function (open = TRUE) {
     }
 
     if (open) {
-        open_gt_table (dat)
+        print (open_gt_table (dat))
     }
 
     return (dat)
