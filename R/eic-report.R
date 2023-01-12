@@ -39,7 +39,7 @@ get_issues_qry <- function (org = "ropensci",
                                    labels (first: 100) {
                                        edges {
                                            node {
-                                               name
+                                               name,
                                            }
                                        }
                                    }
@@ -51,6 +51,19 @@ get_issues_qry <- function (org = "ropensci",
                                                login
                                            },
                                            body
+                                       }
+                                   }
+                                   timelineItems (itemTypes: LABELED_EVENT, first: 100) {
+                                       nodes {
+                                           ... on LabeledEvent {
+                                               actor {
+                                                   login
+                                               },
+                                               createdAt,
+                                               label {
+                                                   name
+                                               }
+                                           }
                                        }
                                    }
                                }
@@ -76,7 +89,10 @@ devguide_eic_gh_data <- function () {
 
     number <- assignees <- created_at <- last_edited_at <-
         updated_at <- titles <- NULL
-    labels <- comments <- list ()
+    # The "event_" field come from the timeline data, and include data on all
+    # events, both addition and removal of labels. "labels" holds the current
+    # labels only.
+    labels <- event_labels <- event_dates <- event_actors <- comments <- list ()
 
     while (has_next_page) {
 
@@ -122,35 +138,78 @@ devguide_eic_gh_data <- function () {
         )
         labels <- c (
             labels,
-            lapply (edges, function (i) unname (unlist (i$node$labels$edges)))
+            lapply (edges, function (i) unname (unlist (i$node$labels)))
         )
+        # Dates for labels are in separate "timeline" data:
+        event_labels <- c (
+            event_labels,
+            lapply (edges, function (i) {
+                unlist (lapply (i$node$timeline$nodes,
+                    function (j) j$label$name))
+            })
+        )
+        event_dates <- c (
+            event_dates,
+            lapply (edges, function (i) {
+                unlist (lapply (i$node$timeline$nodes,
+                    function (j) j$createdAt))
+            })
+        )
+        event_actors <- c (
+            event_actors,
+            lapply (edges, function (i) {
+                unlist (lapply (i$node$timeline$nodes,
+                    function (j) j$actor$login))
+            })
+        )
+
         comments <- c (
             comments,
             lapply (edges, function (i) unname (unlist (i$node$comments$nodes)))
         )
     }
 
-    # Sort labels so "official" 'N/' ones come first, which happens to be done
-    # perfectly by standard sort:
-    labels <- lapply (labels, function (i) sort (i))
+    # Reduce "event" data down to current labels only, and sort by labels so
+    # that "official" 'N/' ones come first, which happens to be done perfectly
+    # by standard sort:
+    for (i in seq_along (labels)) {
+        index <- which (event_labels [[i]] %in% labels [[i]])
+        index <- index [order (event_labels [[i]] [index])]
+        event_labels [[i]] <- event_labels [[i]] [index]
+        event_dates [[i]] <- event_dates [[i]] [index]
+        event_actors [[i]] <- event_actors [[i]] [index]
+    }
+    # neither "labels" nor "event_actors" are used from that point on.
+
     # Replace NULL with empty label
-    labels [which (vapply (labels, is.null, logical (1L)))] <- ""
-    # Then extract latest stage:
-    stages <- vapply (labels, function (i) {
-        ret <- NA_character_
-        st_i <- grep ("^[0-9]\\/", i, value = TRUE)
+    event_labels [which (vapply (event_labels, is.null, logical (1L)))] <- ""
+    event_dates [which (vapply (event_dates, is.null, logical (1L)))] <- ""
+
+    # Then extract latest stage and associated dates
+    stages <- vapply (seq_along (labels), function (i) {
+        ret <- rep (NA_character_, 2L)
+        st_i <- grep ("^[0-9]\\/", event_labels [[i]])
         if (length (st_i) > 0) {
-            ret <- st_i [length (st_i)]
+            st_i <- max (st_i) # in case multiple stage labels
+            ret <- c (
+                event_labels [[i]] [st_i],
+                as.character (event_dates [[i]] [st_i])
+            )
         }
         return (ret)
-    }, character (1L))
+    }, character (2L))
+    stages <- data.frame (t (stages))
+    names (stages) <- c ("label", "date")
+    stages$date <- as.Date (stages$date)
+
     # Also identify any issues with multiple stages:
-    multiple_stages <- vapply (labels, function (i) {
+    multiple_stages <- vapply (event_labels, function (i) {
         length (grep ("^[0-9]\\/", i)) > 1L
     }, logical (1L))
 
-    # Finally, reduce labels to the non-stage values:
-    labels <- lapply (labels, function (i) {
+    # Finally, reduce labels to the non-stage values, ignoring
+    # `labels_created_at` and `labels_updated_at` from here.
+    event_labels <- lapply (event_labels, function (i) {
         st_i <- grep ("^[0-9]\\/", i)
         if (length (st_i) > 0) {
             i <- i [-st_i]
@@ -168,19 +227,19 @@ devguide_eic_gh_data <- function () {
 
     res <- data.frame (
         number = number,
-        titles = titles,
-        stage = stages,
+        title = titles,
+        stage = stages$label,
+        stage_date = stages$date,
         has_multiple_stages = multiple_stages,
-        labels = I (labels),
+        labels = I (event_labels),
         assignees = I (assignees),
         created_at = lubridate::date (lubridate::ymd_hms (created_at)),
         last_edited_at = lubridate::date (lubridate::ymd_hms (last_edited_at)),
         updated_at = lubridate::date (lubridate::ymd_hms (updated_at)),
         comments = I (comments)
-    )
-    res <- res [order (res$stage), ]
+    ) %>% dplyr::arrange (stage, stage_date)
 
-    # That puts "0/editorial-team-pre" before "0/presubmission" - reverse these:
+    # That puts "0/editorial-team-prep" before "0/presubmission" - reverse these:
     index <- grep ("^0\\/", res$stage)
     if (length (index) > 0) {
         res0 <- res [index, ]
@@ -368,7 +427,7 @@ open_gt_table <- function (dat) {
         gt::tab_style (
             style = list (gt::cell_fill (color = "#FFFF99")),
             locations = gt::cells_body (
-                columns = c (`number`, `titles`, `labels`)
+                columns = c (`number`, `title`, `stage`, `stage_date`, `labels`)
             )
         ) %>%
         gt::tab_spanner (
@@ -378,12 +437,12 @@ open_gt_table <- function (dat) {
         ) %>%
         gt::tab_spanner (
             label = "Dates",
-            columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
+            columns = c (`created_at`, `last_edited_at`, `updated_at`)
         ) %>%
         gt::tab_style (
             style = list (gt::cell_fill (color = "#EEEEEE")),
             locations = gt::cells_body (
-                columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
+                columns = c (`created_at`, `last_edited_at`, `updated_at`)
             )
         ) %>%
         gt::tab_spanner (
