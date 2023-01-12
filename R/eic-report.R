@@ -74,8 +74,8 @@ devguide_eic_gh_data <- function () {
     has_next_page <- TRUE
     end_cursor <- NULL
 
-    number <- assignees <- createdAt <- lastEditedAt <-
-        updatedAt <- titles <- NULL
+    number <- assignees <- created_at <- last_edited_at <-
+        updated_at <- titles <- NULL
     labels <- comments <- list ()
 
     while (has_next_page) {
@@ -92,19 +92,42 @@ devguide_eic_gh_data <- function () {
 
         edges <- dat$data$repository$issues$edges
 
-        number <- c (number, vapply (edges, function (i) i$node$number, integer (1L)))
-        assignees <- c (assignees, lapply (edges, function (i) unlist (i$node$assignees$nodes)))
-        createdAt <- c (createdAt, vapply (edges, function (i) i$node$createdAt, character (1L)))
-        lastEditedAt <- c (lastEditedAt, vapply (edges, function (i) {
-            res <- i$node$lastEditedAt
-            if (is.null (res)) res <- ""
-            return (res)
-        }, character (1L)))
-        updatedAt <- c (updatedAt, vapply (edges, function (i) i$node$updatedAt, character (1L)))
-        titles <- c (titles, vapply (edges, function (i) i$node$title, character (1L)))
-        labels <- c (labels, lapply (edges, function (i) unname (unlist (i$node$labels$edges))))
-        comments <- c (comments, lapply (edges, function (i)
-            unname (unlist (i$node$comments$nodes))))
+        number <- c (
+            number,
+            vapply (edges, function (i) i$node$number, integer (1L))
+        )
+        assignees <- c (
+            assignees,
+            lapply (edges, function (i) unlist (i$node$assignees$nodes))
+        )
+        created_at <- c (
+            created_at,
+            vapply (edges, function (i) i$node$createdAt, character (1L))
+        )
+        last_edited_at <- c (
+            last_edited_at,
+            vapply (edges, function (i) {
+                res <- i$node$lastEditedAt
+                if (is.null (res)) res <- ""
+                return (res)
+            }, character (1L))
+        )
+        updated_at <- c (
+            updated_at,
+            vapply (edges, function (i) i$node$updatedAt, character (1L))
+        )
+        titles <- c (
+            titles,
+            vapply (edges, function (i) i$node$title, character (1L))
+        )
+        labels <- c (
+            labels,
+            lapply (edges, function (i) unname (unlist (i$node$labels$edges)))
+        )
+        comments <- c (
+            comments,
+            lapply (edges, function (i) unname (unlist (i$node$comments$nodes)))
+        )
     }
 
     # Sort labels so "official" 'N/' ones come first, which happens to be done
@@ -122,9 +145,9 @@ devguide_eic_gh_data <- function () {
         return (ret)
     }, character (1L))
     # Also identify any issues with multiple stages:
-    multiple_stages <- vapply (labels, function (i)
-        length (grep ("^[0-9]\\/", i)) > 1L,
-        logical (1L))
+    multiple_stages <- vapply (labels, function (i) {
+        length (grep ("^[0-9]\\/", i)) > 1L
+    }, logical (1L))
 
     # Finally, reduce labels to the non-stage values:
     labels <- lapply (labels, function (i) {
@@ -150,9 +173,9 @@ devguide_eic_gh_data <- function () {
         has_multiple_stages = multiple_stages,
         labels = I (labels),
         assignees = I (assignees),
-        createdAt = lubridate::date (lubridate::ymd_hms (createdAt)),
-        lastEditedAt = lubridate::date (lubridate::ymd_hms (lastEditedAt)),
-        updatedAt = lubridate::date (lubridate::ymd_hms (updatedAt)),
+        created_at = lubridate::date (lubridate::ymd_hms (created_at)),
+        last_edited_at = lubridate::date (lubridate::ymd_hms (last_edited_at)),
+        updated_at = lubridate::date (lubridate::ymd_hms (updated_at)),
         comments = I (comments)
     )
     res <- res [order (res$stage), ]
@@ -228,12 +251,15 @@ extract_comment_info <- function (dat) {
         actors <- x [index + 1]
         comments <- x [index + 2]
 
-        index <- which (actors == "ropensci-review-bot" & grepl ("assigned|added", comments, ignore.case = TRUE))
+        index <- which (
+            actors == "ropensci-review-bot" &
+            grepl ("assigned|added", comments, ignore.case = TRUE)
+        )
         dates <- dates [index]
         comments <- comments [index]
 
         editor <- editor_date <-
-            rev1 <- rev1_assigned <- rev1_due <- 
+            rev1 <- rev1_assigned <- rev1_due <-
             rev2 <- rev2_assigned <- rev2_due <- ""
 
         index <- grep ("editor$", comments)
@@ -246,8 +272,12 @@ extract_comment_info <- function (dat) {
 
         extract_rev <- function (comments, dates, index) {
             rev1 <- gsub ("\\s.*$", "", comments [index [1]])
-            rev1_assigned <- lubridate::date (lubridate::ymd_hms (dates [index [1]]))
-            g <- regexpr ("[0-9]{4}\\-[0-9]{2}\\-[0-9]{2}", comments [index [1]])
+            rev1_assigned <-
+                lubridate::date (lubridate::ymd_hms (dates [index [1]]))
+            g <- regexpr (
+                "[0-9]{4}\\-[0-9]{2}\\-[0-9]{2}",
+                comments [index [1]]
+            )
             rev1_due <- regmatches (comments [index [1]], g)
             c (rev1, paste0 (rev1_assigned), rev1_due)
         }
@@ -281,12 +311,18 @@ extract_comment_info <- function (dat) {
     res <- lapply (dat$comments, extract_one)
 
     editor <- vapply (res, function (i) i [["editor"]], character (1L))
-    editor_date <- vapply (res, function (i) i [["editor_date"]], character (1L))
+    editor_date <- vapply (res, function (i) {
+        i [["editor_date"]]
+    }, character (1L))
     rev1 <- vapply (res, function (i) i [["rev1"]], character (1L))
-    rev1_assigned <- vapply (res, function (i) i [["rev1_assigned"]], character (1L))
+    rev1_assigned <- vapply (res, function (i) {
+        i [["rev1_assigned"]]
+    }, character (1L))
     rev1_due <- vapply (res, function (i) i [["rev1_due"]], character (1L))
     rev2 <- vapply (res, function (i) i [["rev2"]], character (1L))
-    rev2_assigned <- vapply (res, function (i) i [["rev2_assigned"]], character (1L))
+    rev2_assigned <- vapply (res, function (i) {
+        i [["rev2_assigned"]]
+    }, character (1L))
     rev2_due <- vapply (res, function (i) i [["rev2_due"]], character (1L))
 
     return (data.frame (
@@ -330,7 +366,7 @@ open_gt_table <- function (dat) {
         gt::tab_header ("rOpenSci submission overview") %>%
         gt::cols_hide (has_multiple_stages) %>%
         gt::tab_style (
-            style = list ( gt::cell_fill (color = "#FFFF99")),
+            style = list (gt::cell_fill (color = "#FFFF99")),
             locations = gt::cells_body (
                 columns = c (`number`, `titles`, `labels`)
             )
@@ -345,7 +381,7 @@ open_gt_table <- function (dat) {
             columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
         ) %>%
         gt::tab_style (
-            style = list ( gt::cell_fill (color = "#EEEEEE")),
+            style = list (gt::cell_fill (color = "#EEEEEE")),
             locations = gt::cells_body (
                 columns = c (`createdAt`, `lastEditedAt`, `updatedAt`)
             )
@@ -368,9 +404,14 @@ open_gt_table <- function (dat) {
         gt::tab_style (
             # Alternative dark separators to distinguish group titles
             style = list (
-                gt::cell_borders (side = "bottom", color = "#666666", weight = gt::px (3))
-            ),
-            locations = gt::cells_column_spanners (spanners = c ("ed_span", "rev1span"))
+                gt::cell_borders (
+                    side = "bottom",
+                    color = "#666666",
+                    weight = gt::px (3)
+                )),
+            locations = gt::cells_column_spanners (
+                spanners = c ("ed_span", "rev1span")
+            )
         ) %>%
         gt::tab_options (
             heading.background.color = "#ACEACE",
