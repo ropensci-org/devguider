@@ -1,7 +1,7 @@
 Package: devguider
 Type: Package
 Title: Tools for automating processes to manage rOpenSci's DevGuide
-Version: 0.0.1.001
+Version: 0.0.1.005
 Description: Tools for automating processes to manage rOpenSci's DevGuide.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -28,8 +28,11 @@ Imports:
     dplyr,
     fs,
     gert,
+    gh,
+    gitcreds,
     glue,
     jsonlite,
+    lubridate,
     magrittr,
     memoise,
     purrr,
@@ -40,5 +43,7 @@ Imports:
     urltools,
     withr,
     xml2
+Suggests:
+    gt
 SystemRequirements: GitHub cli
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
