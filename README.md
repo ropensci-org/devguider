@@ -18,6 +18,8 @@ includes the following main functions:
     actually exist.
 4.  `devguide_prerelease()` to open a pre-release issue on GitHub for
     the next release (should be run one month prior to planned release).
+5.  `devguide_eic_report()` for Editors-in-Charge to generate a summary
+    overview of all current “software-review” issues.
 
 An additional utility function, `devguide_path()`, finds the path to the
 local `devguide` repository.
