@@ -18,7 +18,7 @@ get_issues_qry <- function (org = "ropensci",
 
     q <- paste0 ("{
         repository(owner:\"", org, "\", name:\"", repo, "\") {
-                   issues (first: 100", after_txt, ", states: [CLOSED]) {
+                   issues (first: 100", after_txt, ") {
                        pageInfo {
                            hasNextPage
                            endCursor
@@ -28,6 +28,7 @@ get_issues_qry <- function (org = "ropensci",
                                ... on Issue {
                                    number
                                    createdAt
+                                   state
                                    lastEditedAt
                                    updatedAt
                                    assignees (first: 100) {
@@ -88,7 +89,7 @@ devguide_eic_gh_data <- function () {
     end_cursor <- NULL
 
     number <- assignees <- created_at <- last_edited_at <-
-        updated_at <- titles <- NULL
+        updated_at <- state <- titles <- NULL
     # The "event_" field come from the timeline data, and include data on all
     # events, both addition and removal of labels. "labels" holds the current
     # labels only.
@@ -113,6 +114,10 @@ devguide_eic_gh_data <- function () {
         number <- c (
             number,
             vapply (edges, function (i) i$node$number, integer (1L))
+        )
+        state <- c (
+            state,
+            vapply (edges, function (i) i$node$state, character (1L))
         )
         assignees <- c (
             assignees,
@@ -238,6 +243,7 @@ devguide_eic_gh_data <- function () {
     res <- data.frame (
         number = number,
         title = titles,
+        state = state,
         stage = stages$label,
         stage_date = stages$date,
         has_multiple_stages = multiple_stages,
