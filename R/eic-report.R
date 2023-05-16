@@ -18,7 +18,7 @@ get_issues_qry <- function (org = "ropensci",
 
     q <- paste0 ("{
         repository(owner:\"", org, "\", name:\"", repo, "\") {
-                   issues (first: 100", after_txt, ", states: [OPEN]) {
+                   issues (first: 100", after_txt, ", states: [CLOSED]) {
                        pageInfo {
                            hasNextPage
                            endCursor
@@ -94,6 +94,8 @@ devguide_eic_gh_data <- function () {
     # labels only.
     labels <- event_labels <- event_dates <- event_actors <- comments <- list ()
 
+    page_count <- 0L
+
     while (has_next_page) {
 
         q <- get_issues_qry (
@@ -167,6 +169,12 @@ devguide_eic_gh_data <- function () {
             comments,
             lapply (edges, function (i) unname (unlist (i$node$comments$nodes)))
         )
+
+        page_count <- page_count + 1L
+        message (
+            "Retrieved page [", page_count, "] to issue number [",
+            max (number), "]"
+        )
     }
 
     # Reduce "event" data down to current labels only, and sort by labels so
@@ -174,10 +182,12 @@ devguide_eic_gh_data <- function () {
     # by standard sort:
     for (i in seq_along (labels)) {
         index <- which (event_labels [[i]] %in% labels [[i]])
-        index <- index [order (event_labels [[i]] [index])]
-        event_labels [[i]] <- event_labels [[i]] [index]
-        event_dates [[i]] <- event_dates [[i]] [index]
-        event_actors [[i]] <- event_actors [[i]] [index]
+        if (length (index) > 0L) {
+            index <- index [order (event_labels [[i]] [index])]
+            event_labels [[i]] <- event_labels [[i]] [index]
+            event_dates [[i]] <- event_dates [[i]] [index]
+            event_actors [[i]] <- event_actors [[i]] [index]
+        }
     }
     # neither "labels" nor "event_actors" are used from that point on.
 
