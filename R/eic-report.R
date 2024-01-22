@@ -219,7 +219,9 @@ devguide_eic_gh_data <- function () {
 
     # Also identify any issues with multiple stages:
     multiple_stages <- vapply (event_labels, function (i) {
-        length (grep ("^[0-9]\\/", i)) > 1L
+        n_total <- length (grep ("^[0-9]\\/", i))
+        n_approved <- length (grep ("^6\\/", i))
+        n_total > 1L && n_total != n_approved
     }, logical (1L))
 
     # Finally, reduce labels to the non-stage values, ignoring
