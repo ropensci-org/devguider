@@ -2,8 +2,8 @@
 % Please edit documentation in R/devguide-package.R
 \docType{package}
 \name{devguider-package}
+\alias{devguider}
 \alias{devguider-package}
-\alias{_PACKAGE}
 \title{devguider: Tools for automating processes to manage rOpenSci's DevGuide}
 \description{
 Tools for automating processes to manage rOpenSci's DevGuide.
