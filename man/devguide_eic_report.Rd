@@ -5,10 +5,13 @@
 \title{Generate a summary report for incoming Editor-in-Charge of current state of
 all open software-review issues.}
 \usage{
-devguide_eic_report(open = TRUE)
+devguide_eic_report(open_only = TRUE, browse = TRUE)
 }
 \arguments{
-\item{open}{If `TRUE` (default), open the results as a \pkg{DT} `datatable`
+\item{open_only}{If `TRUE` (default), only extract information for currently
+open issues.}
+
+\item{browse}{If `TRUE` (default), open the results as a \pkg{DT} `datatable`
 HTML page in default browser.}
 }
 \value{

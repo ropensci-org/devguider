@@ -9,6 +9,7 @@ get_gh_token <- function (token = "") {
 
 get_issues_qry <- function (org = "ropensci",
                             repo = "software-review",
+                            open_only = TRUE,
                             end_cursor = NULL) {
 
     after_txt <- ""
@@ -16,9 +17,11 @@ get_issues_qry <- function (org = "ropensci",
         after_txt <- paste0 (", after:\"", end_cursor, "\"")
     }
 
+    open_txt <- ifelse (open_only, ", states: [OPEN]", "")
+
     q <- paste0 ("{
         repository(owner:\"", org, "\", name:\"", repo, "\") {
-                   issues (first: 100", after_txt, ") {
+                   issues (first: 100", open_txt, after_txt, ") {
                        pageInfo {
                            hasNextPage
                            endCursor
@@ -83,7 +86,7 @@ get_issues_qry <- function (org = "ropensci",
 #' @return (Invisibly) A `data.frame` with one row per issue and some key
 #' statistics.
 #' @noRd
-devguide_eic_gh_data <- function () {
+devguide_eic_gh_data <- function (open_only = TRUE) {
 
     has_next_page <- TRUE
     end_cursor <- NULL
@@ -102,6 +105,7 @@ devguide_eic_gh_data <- function () {
         q <- get_issues_qry (
             org = "ropensci",
             repo = "software-review",
+            open_only = open_only,
             end_cursor = end_cursor
         )
         dat <- gh::gh_gql (query = q)
@@ -277,14 +281,16 @@ devguide_eic_gh_data <- function () {
 #' Generate a summary report for incoming Editor-in-Charge of current state of
 #' all open software-review issues.
 #'
-#' @param open If `TRUE` (default), open the results as a \pkg{DT} `datatable`
+#' @param open_only If `TRUE` (default), only extract information for currently
+#' open issues.
+#' @param browse If `TRUE` (default), open the results as a \pkg{DT} `datatable`
 #' HTML page in default browser.
 #' @return A `data.frame` with one row per issue and some key statistics.
 #' @export
 
-devguide_eic_report <- function (open = TRUE) {
+devguide_eic_report <- function (open_only = TRUE, browse = TRUE) {
 
-    dat <- devguide_eic_gh_data ()
+    dat <- devguide_eic_gh_data (open_only)
 
     cmt_data <- extract_comment_info (dat)
     dat$comments <- NULL
@@ -312,7 +318,7 @@ devguide_eic_report <- function (open = TRUE) {
         }, character (1L))
     }
 
-    if (open) {
+    if (browse) {
         print (open_gt_table (dat))
     }
 
