@@ -5,5 +5,4 @@
 ^README\.md$
 ^\.github$
 ^Makefile$
-.ropensci-staff
 ^codemeta\.json$
